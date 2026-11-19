@@ -10,22 +10,10 @@ Type in `!mermaid-help` for help on how to use this bot.
 
 <br/>
 
-## Running this bot locally
-### Installation
----
-This installation asumes you have `python3` installed on your machine and know how to use `pip`.
-
-Run the following in the project root directory to get all the dependencies
->```bash
->pip install poetry
->poetry install
->```
-
-<br/>
-
+## Running this bot yourself
 ### Bot Token
 ---
-After we have that installed, we need to grab a bot token from Discord.
+First, grab a bot token from Discord.
 
 Go to [this url](https://discordapp.com/developers/applications/me) and create a new application.<br/>
 Add a name for your local bot, something like: `your-username-test-bot`. 
@@ -33,12 +21,40 @@ Add a name for your local bot, something like: `your-username-test-bot`.
 After you've made an application, you should be redirected to a page with all of the app's details on it. 
 Scroll to the bottom of this page and press "create a bot user". You will then have a "click to reveal" link that shows you your bot's **token**.
 
-Run the following in your terminal:
->```bash
->export TOKEN=[the token you copied above]
->```
+On the same page, under **Privileged Gateway Intents**, enable **Message Content Intent**. The bot reads `!mermaid-` commands from message text and cannot connect without it.
 
 Make sure you make that bot private in that page. 
+
+<br/>
+
+### Running with Docker Compose
+---
+Copy `.env.example` to `.env` and put your token in it:
+>```
+>TOKEN=[the token you copied above]
+>```
+
+Then run the following in the project root directory:
+>```bash
+>docker compose up -d --build
+>```
+
+User themes are stored in a SQLite database on the `themes` volume, so they survive restarts and rebuilds.
+
+<br/>
+
+### Running with Python
+---
+This assumes you have Python 3.13 and `pip` installed.
+
+Run the following in the project root directory:
+>```bash
+>pip install -r requirements.txt
+>export TOKEN=[the token you copied above]
+>python main.py
+>```
+
+Themes are stored in `themes.db` in the current directory; set `THEME_DB_PATH` to store them elsewhere.
 
 <br/>
 
