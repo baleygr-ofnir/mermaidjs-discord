@@ -2,11 +2,13 @@ import discord
 from discord.ext import commands
 import os
 import base64
-import keep_alive
-from replit import db
+import theme_store
 import json
 
-client = commands.Bot(command_prefix=commands.when_mentioned_or(("!mermaid-")))
+intents = discord.Intents.default()
+intents.message_content = True
+
+client = commands.Bot(command_prefix=commands.when_mentioned_or(("!mermaid-")), intents=intents)
 
 client.remove_command('help')
 
@@ -50,8 +52,9 @@ async def help(ctx):
 
 @client.command(aliases=['r'])
 async def render(ctx, *, arg):
-  if (ctx.message.author.mention + "#" + str(ctx.message.author.id)) in db.keys():
-    await ctx.message.reply('https://mermaid.ink/img/' + base64.b64encode(json.dumps({ 'mermaid': {'theme': db[ctx.message.author.mention + "#" + str(ctx.message.author.id)]}, 'code': arg }).encode('ascii')).decode('ascii') + ("?bgColor=333" if db[ctx.message.author.mention + "#" + str(ctx.message.author.id)] == 'dark' else ""))
+  theme = theme_store.get_theme(ctx.message.author.id)
+  if theme is not None:
+    await ctx.message.reply('https://mermaid.ink/img/' + base64.b64encode(json.dumps({ 'mermaid': {'theme': theme}, 'code': arg }).encode('ascii')).decode('ascii') + ("?bgColor=333" if theme == 'dark' else ""))
   else:
     await ctx.message.reply('https://mermaid.ink/img/' + base64.b64encode(arg.encode('ascii')).decode('ascii'))
 
@@ -68,13 +71,14 @@ async def setTheme(ctx, theme = ''):
   if not(theme):
     await ctx.message.reply("A theme must be specified for this command to work")
   else:
-    db[ctx.message.author.mention + "#" + str(ctx.message.author.id)] = theme
+    theme_store.set_theme(ctx.message.author.id, theme)
     await ctx.message.reply("Theme successfully set to " + theme)
 
 @client.command()
 async def getTheme(ctx):
-  if (ctx.message.author.mention + "#" + str(ctx.message.author.id)) in db.keys():
-    await ctx.message.reply(db[ctx.message.author.mention + "#" + str(ctx.message.author.id)])
+  theme = theme_store.get_theme(ctx.message.author.id)
+  if theme is not None:
+    await ctx.message.reply(theme)
   else:
     await ctx.message.reply("default")
 
@@ -87,6 +91,6 @@ async def setStatus(ctx,arg='Online'):
   else:
     await client.change_presence(status=newStatus)
 
-keep_alive.keep_alive()
+theme_store.init()
 
 client.run(os.environ['TOKEN'])
