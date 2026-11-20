@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands
 import os
 import base64
-import theme_store
-import json
 import sys
 
 ALLOWED_CHANNEL_ID = os.environ.get('ALLOWED_CHANNEL_ID', '').strip()
@@ -25,17 +23,19 @@ async def on_ready():
 def allowedChannel():
   return client.get_partial_messageable(ALLOWED_CHANNEL_ID)
 
-# Every answer goes to the allowed channel. A command sent from anywhere else
-# (another channel, another server or a DM) gets its answer there, with a mention.
+# Every answer goes to the allowed channel, also for commands sent from another
+# channel, another server or a DM.
 async def respond(ctx, content=None, embed=None):
-  if ctx.channel.id == ALLOWED_CHANNEL_ID:
-    if content is None:
-      await ctx.send(embed=embed)
-    else:
-      await ctx.message.reply(content, embed=embed)
+  if ctx.channel.id == ALLOWED_CHANNEL_ID and content is not None:
+    await ctx.message.reply(content, embed=embed)
   else:
-    mention = ctx.message.author.mention
-    await allowedChannel().send(mention if content is None else mention + ' ' + content, embed=embed)
+    await allowedChannel().send(content, embed=embed)
+
+# Diagrams always use Mermaid's dark theme on a dark background, as a PNG.
+DARK_IMAGE_OPTIONS = '?theme=dark&bgColor=1b1b1f&type=png'
+
+def diagramUrl(code):
+  return 'https://mermaid.ink/img/' + base64.urlsafe_b64encode(code.encode('ascii')).decode('ascii') + DARK_IMAGE_OPTIONS
 
 def helpEmbed():
   embed = discord.Embed(description="Help on using the Mermaid.js Discord Bot.", color=4372867)
@@ -45,8 +45,6 @@ def helpEmbed():
 __!mermaid-r__ or __!mermaid-render__: Renders the diagram with the code following the command. Allows Mermaid.js diagram syntax.\n\
 __!mermaid-invite__: Gets the invite link of the bot.\n\
 __!mermaid-support__: Gets a link to a support issue tracker for the bot.\n\
-__!mermaid-setTheme__: Sets the theme to use for the diagrams rendered for the user.\n\
-__!mermaid-getTheme__: Gets the currently set theme for the user.\n\
 __!mermaid-setStatus__: Sets the current status of the bot. One of `dnd` or `do_not_disturb`, `online`, `idle`, `offline`, or `invisible`.", inline=False)
   embed.add_field(name="Example Diagram", value="""
 ```markdown
@@ -59,7 +57,7 @@ graph TD
   C -->|Three| F[fa:fa-car Car]
 ```
 """)
-  embed.set_image(url="https://mermaid.ink/img/pako:eNpVkMtqw0AMRX9FaNVA_ANeFBI7zSbQQrLzeCE8SmZI54E8JgTb_95x00KileCcexEasQuascSLUDRwqpWHPJumMmL75KhvoSjepz0ncMHzfYLt2z5Ab0KM1l9WD3-7SFCNh0VjSMb66_xA1W_-0_MEdXOgmEJsn8npFibYNfbL5PpXYoRz6qM5U3mmoiOBiqTFNToWR1bns8cloDAZdqywzKsmuSpUfs7eEDUl3mmbgmDu-O55jTSkcLz7DsskA_9LtaX8AvdnzT9s-1qQ")
+  embed.set_image(url="https://mermaid.ink/img/pako:eNpVkMtqw0AMRX9FaNVA_ANeFBI7zSbQQrLzeCE8SmZI54E8JgTb_95x00KileCcexEasQuascSLUDRwqpWHPJumMmL75KhvoSjepz0ncMHzfYLt2z5Ab0KM1l9WD3-7SFCNh0VjSMb66_xA1W_-0_MEdXOgmEJsn8npFibYNfbL5PpXYoRz6qM5U3mmoiOBiqTFNToWR1bns8cloDAZdqywzKsmuSpUfs7eEDUl3mmbgmDu-O55jTSkcLz7DsskA_9LtaX8AvdnzT9s-1qQ" + DARK_IMAGE_OPTIONS)
   return embed
 
 @client.event
@@ -72,11 +70,7 @@ async def help(ctx):
 
 @client.command(aliases=['r'])
 async def render(ctx, *, arg):
-  theme = theme_store.get_theme(ctx.message.author.id)
-  if theme is not None:
-    await respond(ctx, 'https://mermaid.ink/img/' + base64.b64encode(json.dumps({ 'mermaid': {'theme': theme}, 'code': arg }).encode('ascii')).decode('ascii') + ("?bgColor=333" if theme == 'dark' else ""))
-  else:
-    await respond(ctx, 'https://mermaid.ink/img/' + base64.b64encode(arg.encode('ascii')).decode('ascii'))
+  await respond(ctx, embed=discord.Embed().set_image(url=diagramUrl(arg)))
 
 @client.command()
 async def invite(ctx):
@@ -87,22 +81,6 @@ async def support(ctx):
   await respond(ctx, embed=discord.Embed(description="The link to the issue tracker is https://github.com/Yash-Singh1/mermaidjs-discord/issues", color=4372867))
 
 @client.command()
-async def setTheme(ctx, theme = ''):
-  if not(theme):
-    await respond(ctx, "A theme must be specified for this command to work")
-  else:
-    theme_store.set_theme(ctx.message.author.id, theme)
-    await respond(ctx, "Theme successfully set to " + theme)
-
-@client.command()
-async def getTheme(ctx):
-  theme = theme_store.get_theme(ctx.message.author.id)
-  if theme is not None:
-    await respond(ctx, theme)
-  else:
-    await respond(ctx, "default")
-
-@client.command()
 async def setStatus(ctx,arg='Online'):
   try:
     newStatus = discord.Status[arg]
@@ -110,7 +88,5 @@ async def setStatus(ctx,arg='Online'):
     await respond(ctx, "There was an error parsing the status")
   else:
     await client.change_presence(status=newStatus)
-
-theme_store.init()
 
 client.run(os.environ['TOKEN'])
