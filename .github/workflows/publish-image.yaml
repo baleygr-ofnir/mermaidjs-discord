@@ -45,3 +45,17 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      # Komodo's Stack webhook checks a GitHub-style signature (HMAC-SHA256 of the
+      # body) and the pushed branch in "ref", then deploys the Stack.
+      - name: Tell Komodo to deploy
+        env:
+          KOMODO_WEBHOOK: ${{ secrets.KOMODO_WEBHOOK }}
+          KOMODO_TOKEN: ${{ secrets.KOMODO_TOKEN }}
+        run: |
+          body="{\"ref\":\"$GITHUB_REF\"}"
+          signature=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$KOMODO_TOKEN" -r | cut -d' ' -f1)
+          curl --fail-with-body --silent --show-error -X POST "$KOMODO_WEBHOOK" \
+            -H 'Content-Type: application/json' \
+            -H "X-Hub-Signature-256: sha256=$signature" \
+            --data "$body"
