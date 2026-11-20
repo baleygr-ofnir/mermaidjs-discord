@@ -23,11 +23,18 @@ First, create a Discord app and grab its bot token.
 
 <br/>
 
+### Answer channel
+---
+The bot answers only in one text channel, set by `ALLOWED_CHANNEL_ID` (the channel's numeric Discord ID). It takes commands from any channel, any server it is in, and direct messages; an answer to a command sent from anywhere else is posted in that channel with a mention of the sender. The bot refuses to start without this setting.
+
+<br/>
+
 ### Running with Docker Compose
 ---
-Copy `.env.example` to `.env` and put your token in it:
+Copy `.env.example` to `.env` and put your token and channel ID in it:
 >```
 >TOKEN=[the token you copied above]
+>ALLOWED_CHANNEL_ID=[the ID of the answer channel]
 >```
 
 Then run the following in the project root directory:
@@ -49,6 +56,7 @@ Run the following in the project root directory:
 >```bash
 >pip install -r requirements.txt
 >export TOKEN=[the token you copied above]
+>export ALLOWED_CHANNEL_ID=[the ID of the answer channel]
 >python main.py
 >```
 
