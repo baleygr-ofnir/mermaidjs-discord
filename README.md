@@ -25,7 +25,9 @@ First, create a Discord app and grab its bot token.
 
 ### Answer channel
 ---
-The bot answers only in one text channel, set by `ALLOWED_CHANNEL_ID` (the channel's numeric Discord ID). It takes commands from any channel, any server it is in, and direct messages; an answer to a command sent from anywhere else is posted in that channel with a mention of the sender. The bot refuses to start without this setting.
+The bot answers only in one text channel, set by `ALLOWED_CHANNEL_ID` (the channel's numeric Discord ID). It takes commands from any channel, any server it is in, and direct messages; an answer to a command sent from anywhere else is posted in that channel. The bot refuses to start without this setting.
+
+Diagrams are posted as an image only, always in Mermaid's dark theme on a dark background.
 
 <br/>
 
@@ -44,8 +46,6 @@ Then run the following in the project root directory:
 
 This pulls `ghcr.io/baleygr-ofnir/mermaidjs-discord:latest`, which CI builds and publishes on every push to `main`. Run `docker compose pull` to fetch a newer image.
 
-User themes are stored in a SQLite database on the `themes` volume, so they survive restarts and image updates.
-
 <br/>
 
 ### Running with Python
@@ -59,8 +59,6 @@ Run the following in the project root directory:
 >export ALLOWED_CHANNEL_ID=[the ID of the answer channel]
 >python main.py
 >```
-
-Themes are stored in `themes.db` in the current directory; set `THEME_DB_PATH` to store them elsewhere.
 
 <br/>
 
