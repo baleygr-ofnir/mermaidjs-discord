@@ -70,7 +70,10 @@ async def help(ctx):
 
 @client.command(aliases=['r'])
 async def render(ctx, *, arg):
-  await respond(ctx, embed=discord.Embed().set_image(url=diagramUrl(arg)))
+  url = diagramUrl(arg)
+  print('Render from', ctx.author, 'in', ctx.channel, '->', url)
+  await respond(ctx, embed=discord.Embed().set_image(url=url))
+  print('Render sent')
 
 @client.command()
 async def invite(ctx):
