@@ -32,10 +32,12 @@ Copy `.env.example` to `.env` and put your token in it:
 
 Then run the following in the project root directory:
 >```bash
->docker compose up -d --build
+>docker compose up -d
 >```
 
-User themes are stored in a SQLite database on the `themes` volume, so they survive restarts and rebuilds.
+This pulls `ghcr.io/baleygr-ofnir/mermaidjs-discord:latest`, which CI builds and publishes on every push to `main`. Run `docker compose pull` to fetch a newer image.
+
+User themes are stored in a SQLite database on the `themes` volume, so they survive restarts and image updates.
 
 <br/>
 

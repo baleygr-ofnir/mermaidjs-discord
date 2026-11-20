@@ -1,6 +1,6 @@
 services:
   bot:
-    build: .
+    image: ghcr.io/baleygr-ofnir/mermaidjs-discord:latest
     restart: unless-stopped
     init: true
     environment:
