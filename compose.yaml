@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    init: true
+    environment:
+      TOKEN: ${TOKEN:-}
+    volumes:
+      - themes:/data
+
+volumes:
+  themes:
