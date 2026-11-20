@@ -5,6 +5,7 @@ services:
     init: true
     environment:
       TOKEN: ${TOKEN:-}
+      ALLOWED_CHANNEL_ID: ${ALLOWED_CHANNEL_ID:-}
     volumes:
       - themes:/data
 
