@@ -13,17 +13,13 @@ Type in `!mermaid-help` for help on how to use this bot.
 ## Running this bot yourself
 ### Bot Token
 ---
-First, grab a bot token from Discord.
+First, create a Discord app and grab its bot token.
 
-Go to [this url](https://discordapp.com/developers/applications/me) and create a new application.<br/>
-Add a name for your local bot, something like: `your-username-test-bot`. 
+1. Go to the [Developer Portal](https://discord.com/developers/applications) and press **New Application**. Add a name for your bot, something like `your-username-test-bot`, and press **Create**. You land on the app's **General Information** page. New apps get a bot user automatically.
 
-After you've made an application, you should be redirected to a page with all of the app's details on it. 
-Scroll to the bottom of this page and press "create a bot user". You will then have a "click to reveal" link that shows you your bot's **token**.
+2. Open the **Bot** page from the side menu. Under **Token**, press **Reset Token** and copy the token. Discord shows it only once; reset it again if you lose it.
 
-On the same page, under **Privileged Gateway Intents**, enable **Message Content Intent**. The bot reads `!mermaid-` commands from message text and cannot connect without it.
-
-Make sure you make that bot private in that page. 
+3. On the same **Bot** page, under **Privileged Gateway Intents**, turn on the **Message Content** intent. The bot reads `!mermaid-` commands from message text, and Discord refuses its connection if the intent is off.
 
 <br/>
 
@@ -60,10 +56,10 @@ Themes are stored in `themes.db` in the current directory; set `THEME_DB_PATH` t
 
 ### Adding your Bot
 ---
-1. On the side tab go to `OAuth2>URL Generator`.
+1. Open the **Installation** page from the side menu.
 
-2. Under scopes, select bot.
+2. Under **Install Link**, select **Discord Provided Link**. A **Default Install Settings** section appears.
 
-3. Under permissions, select admin.
+3. Under **Guild Install**, add the `bot` scope. A **Permissions** menu appears; select **Administrator**.
 
-4. Use the generated URL to add it to your personal discord server to test out that your code is working correctly.
+4. Copy the URL from the **Install Link** section and open it to add the bot to your personal Discord server, to test that your code is working correctly.
