@@ -4,6 +4,12 @@ import os
 import base64
 import theme_store
 import json
+import sys
+
+ALLOWED_CHANNEL_ID = os.environ.get('ALLOWED_CHANNEL_ID', '').strip()
+if not ALLOWED_CHANNEL_ID.isdigit():
+  sys.exit('ALLOWED_CHANNEL_ID must be set to the ID of the channel the bot writes in')
+ALLOWED_CHANNEL_ID = int(ALLOWED_CHANNEL_ID)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,7 +22,22 @@ client.remove_command('help')
 async def on_ready():
   print('Logged on as', client.user.name)
 
-async def helpCommand(ctx):
+def allowedChannel():
+  return client.get_partial_messageable(ALLOWED_CHANNEL_ID)
+
+# Every answer goes to the allowed channel. A command sent from anywhere else
+# (another channel, another server or a DM) gets its answer there, with a mention.
+async def respond(ctx, content=None, embed=None):
+  if ctx.channel.id == ALLOWED_CHANNEL_ID:
+    if content is None:
+      await ctx.send(embed=embed)
+    else:
+      await ctx.message.reply(content, embed=embed)
+  else:
+    mention = ctx.message.author.mention
+    await allowedChannel().send(mention if content is None else mention + ' ' + content, embed=embed)
+
+def helpEmbed():
   embed = discord.Embed(description="Help on using the Mermaid.js Discord Bot.", color=4372867)
   embed.set_author(name="Help")
   embed.add_field(name="Helpful Links", value="[GitHub](https://github.com/Yash-Singh1/mermaidjs-discord) | [Issue Tracker](https://github.com/Yash-Singh1/mermaidjs-discord/issues) | [Mermaid.js Documentation](https://mermaid-js.github.io/)", inline=False)
@@ -39,55 +60,54 @@ graph TD
 ```
 """)
   embed.set_image(url="https://mermaid.ink/img/pako:eNpVkMtqw0AMRX9FaNVA_ANeFBI7zSbQQrLzeCE8SmZI54E8JgTb_95x00KileCcexEasQuascSLUDRwqpWHPJumMmL75KhvoSjepz0ncMHzfYLt2z5Ab0KM1l9WD3-7SFCNh0VjSMb66_xA1W_-0_MEdXOgmEJsn8npFibYNfbL5PpXYoRz6qM5U3mmoiOBiqTFNToWR1bns8cloDAZdqywzKsmuSpUfs7eEDUl3mmbgmDu-O55jTSkcLz7DsskA_9LtaX8AvdnzT9s-1qQ")
-  await ctx.send(embed=embed)
+  return embed
 
 @client.event
 async def on_guild_join(guild):
-  if guild.system_channel:
-    await helpCommand(guild.system_channel)
+  await allowedChannel().send(embed=helpEmbed())
 
 @client.command()
 async def help(ctx):
-  await helpCommand(ctx)
+  await respond(ctx, embed=helpEmbed())
 
 @client.command(aliases=['r'])
 async def render(ctx, *, arg):
   theme = theme_store.get_theme(ctx.message.author.id)
   if theme is not None:
-    await ctx.message.reply('https://mermaid.ink/img/' + base64.b64encode(json.dumps({ 'mermaid': {'theme': theme}, 'code': arg }).encode('ascii')).decode('ascii') + ("?bgColor=333" if theme == 'dark' else ""))
+    await respond(ctx, 'https://mermaid.ink/img/' + base64.b64encode(json.dumps({ 'mermaid': {'theme': theme}, 'code': arg }).encode('ascii')).decode('ascii') + ("?bgColor=333" if theme == 'dark' else ""))
   else:
-    await ctx.message.reply('https://mermaid.ink/img/' + base64.b64encode(arg.encode('ascii')).decode('ascii'))
+    await respond(ctx, 'https://mermaid.ink/img/' + base64.b64encode(arg.encode('ascii')).decode('ascii'))
 
 @client.command()
 async def invite(ctx):
-  await ctx.send(embed=discord.Embed(description="The invite link is https://discord.com/api/oauth2/authorize?client_id=935684419837132910&permissions=274877910016&scope=bot", color=4372867))
+  await respond(ctx, embed=discord.Embed(description="The invite link is https://discord.com/api/oauth2/authorize?client_id=935684419837132910&permissions=274877910016&scope=bot", color=4372867))
 
 @client.command()
 async def support(ctx):
-  await ctx.send(embed=discord.Embed(description="The link to the issue tracker is https://github.com/Yash-Singh1/mermaidjs-discord/issues", color=4372867))
+  await respond(ctx, embed=discord.Embed(description="The link to the issue tracker is https://github.com/Yash-Singh1/mermaidjs-discord/issues", color=4372867))
 
 @client.command()
 async def setTheme(ctx, theme = ''):
   if not(theme):
-    await ctx.message.reply("A theme must be specified for this command to work")
+    await respond(ctx, "A theme must be specified for this command to work")
   else:
     theme_store.set_theme(ctx.message.author.id, theme)
-    await ctx.message.reply("Theme successfully set to " + theme)
+    await respond(ctx, "Theme successfully set to " + theme)
 
 @client.command()
 async def getTheme(ctx):
   theme = theme_store.get_theme(ctx.message.author.id)
   if theme is not None:
-    await ctx.message.reply(theme)
+    await respond(ctx, theme)
   else:
-    await ctx.message.reply("default")
+    await respond(ctx, "default")
 
 @client.command()
 async def setStatus(ctx,arg='Online'):
   try:
     newStatus = discord.Status[arg]
   except:
-    await ctx.message.reply("There was an error parsing the status")
+    await respond(ctx, "There was an error parsing the status")
   else:
     await client.change_presence(status=newStatus)
 
